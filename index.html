@@ -5,19 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Vigil</title>
 <style>
-/* ── Reset & Base ─────────────────────────────────────────── */
+/* ── Reset & Terminal Theme ──────────────────────────────── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --bg:      #0a0a0c;
-  --surface: #111114;
-  --border:  #1e1e24;
-  --text:    #d4d4d8;
-  --muted:   #52525b;
-  --accent:  #38bdf8;
-  --warn:    #facc15;
-  --danger:  #ef4444;
-  --mono:    'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  --bg:        #0a0a0c;
+  --surface:   #111116;
+  --surface-2: #181820;
+  --border:    #22222c;
+  --border-lit:#333342;
+  --text:      #e4e4e7;
+  --muted:     #71717a;
+  --accent:    #38bdf8;
+  --warn:      #facc15;
+  --danger:    #ef4444;
+  --mono:      'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', Consolas, monospace;
 }
 
 html { font-size: 15px; }
@@ -29,9 +31,10 @@ body {
   line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Subtle scan-line overlay */
+/* Subtle CRT scanline overlay */
 body::after {
   content: '';
   position: fixed;
@@ -41,598 +44,801 @@ body::after {
     0deg,
     transparent,
     transparent 2px,
-    rgba(0,0,0,.06) 2px,
-    rgba(0,0,0,.06) 4px
+    rgba(0, 0, 0, 0.12) 2px,
+    rgba(0, 0, 0, 0.12) 4px
   );
   z-index: 9999;
 }
 
-/* ── Layout ───────────────────────────────────────────────── */
+/* ── Container ───────────────────────────────────────────── */
 .shell {
-  max-width: 640px;
+  max-width: 660px;
   margin: 0 auto;
-  padding: 2rem 1.25rem 6rem;
+  padding: 2.5rem 1.25rem 6rem;
 }
 
-/* ── Header ───────────────────────────────────────────────── */
+/* ── Header ──────────────────────────────────────────────── */
 .header {
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2.25rem;
   border-bottom: 1px solid var(--border);
   padding-bottom: 2rem;
+  position: relative;
+}
+
+.logo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .65rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: .25rem .75rem;
+  border-radius: 999px;
+  margin-bottom: 1rem;
+}
+
+.logo-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: pulse-dot 1.8s infinite;
 }
 
 .header h1 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  letter-spacing: .15em;
+  font-size: 2.1rem;
+  font-weight: 800;
+  letter-spacing: .2em;
   text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: .5rem;
-  text-shadow: 0 0 20px rgba(56,189,248,.25);
+  color: var(--text);
+  margin-bottom: .4rem;
+  text-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
 }
 
 .header .tagline {
-  font-size: .75rem;
+  font-size: .8rem;
   color: var(--muted);
   letter-spacing: .08em;
   text-transform: uppercase;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .rules {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .rule {
-  font-size: .7rem;
-  padding: .4rem .8rem;
-  border-radius: 4px;
+  font-size: .72rem;
+  padding: .5rem .9rem;
+  border-radius: 6px;
   letter-spacing: .04em;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
 }
 
 .rule--heal {
-  background: rgba(56,189,248,.08);
-  border: 1px solid rgba(56,189,248,.2);
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.25);
   color: var(--accent);
 }
 
 .rule--kill {
-  background: rgba(239,68,68,.08);
-  border: 1px solid rgba(239,68,68,.2);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
   color: var(--danger);
 }
 
-/* ── Composer ─────────────────────────────────────────────── */
-.composer {
-  position: relative;
+/* ── Composer Area ───────────────────────────────────────── */
+.composer-wrapper {
   margin-bottom: 2rem;
 }
 
-.composer textarea {
-  width: 100%;
-  min-height: 80px;
-  resize: vertical;
+.composer-box {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: border-color .2s, box-shadow .2s;
+  position: relative;
+}
+
+.composer-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 20px rgba(56, 189, 248, 0.1);
+}
+
+.composer-textarea {
+  width: 100%;
+  min-height: 85px;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: vertical;
   color: var(--text);
   font-family: var(--mono);
-  font-size: .85rem;
-  padding: .85rem 1rem;
-  padding-bottom: 2.5rem;
-  line-height: 1.5;
-  transition: border-color .2s;
+  font-size: .9rem;
+  line-height: 1.6;
 }
 
-.composer textarea:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(56,189,248,.1);
-}
-
-.composer textarea::placeholder {
+.composer-textarea::placeholder {
   color: var(--muted);
   font-style: italic;
 }
 
-.composer-footer {
-  position: absolute;
-  bottom: 8px;
-  left: 12px;
-  right: 12px;
+.composer-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: .75rem;
+  padding-top: .75rem;
+  border-top: 1px solid var(--border);
 }
 
-.entropy-warn {
-  font-size: .65rem;
+.entropy-alert {
+  font-size: .7rem;
   color: var(--danger);
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
   opacity: 0;
-  transition: opacity .15s;
+  transform: translateY(2px);
+  transition: opacity .15s, transform .15s;
   pointer-events: none;
 }
 
-.entropy-warn.visible { opacity: 1; }
+.entropy-alert.active {
+  opacity: 1;
+  transform: translateY(0);
+}
 
-.composer button {
+.entropy-alert::before {
+  content: '⚡';
+}
+
+.btn-transmit {
   background: var(--accent);
-  color: var(--bg);
+  color: #06090e;
   border: none;
-  font-family: var(--mono);
-  font-size: .7rem;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  padding: .4rem 1rem;
   border-radius: 4px;
-  cursor: pointer;
-  transition: background .15s, transform .1s;
-}
-
-.composer button:hover { background: #7dd3fc; }
-.composer button:active { transform: scale(.97); }
-.composer button:disabled { opacity: .4; cursor: default; }
-
-/* ── Stats bar ────────────────────────────────────────────── */
-.stats {
-  display: flex;
-  gap: 1.5rem;
-  justify-content: center;
-  font-size: .65rem;
-  color: var(--muted);
-  letter-spacing: .04em;
-  margin-bottom: 1.5rem;
+  font-family: var(--mono);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .08em;
   text-transform: uppercase;
+  padding: .5rem 1.1rem;
+  cursor: pointer;
+  transition: background .15s, transform .08s, opacity .15s;
 }
 
-.stats span { color: var(--text); font-weight: 600; }
-
-/* ── Feed ─────────────────────────────────────────────────── */
-.feed { display: flex; flex-direction: column; gap: 1rem; }
-
-.feed-empty {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: var(--muted);
-  font-size: .8rem;
-  font-style: italic;
-  border: 1px dashed var(--border);
-  border-radius: 6px;
+.btn-transmit:hover:not(:disabled) {
+  background: #7dd3fc;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
 }
 
-/* ── Post Capsule ─────────────────────────────────────────── */
-.capsule {
+.btn-transmit:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn-transmit:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Metrics Bar ─────────────────────────────────────────── */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .75rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: .9rem 1rem .7rem;
-  position: relative;
-  transition: opacity .3s, filter .3s, transform .3s;
-  will-change: opacity, filter, transform;
-  animation: capsule-in .35s cubic-bezier(.22,1,.36,1);
+  padding: .75rem;
+  text-align: center;
 }
 
-@keyframes capsule-in {
-  from { opacity: 0; transform: translateY(-10px) scale(.97); }
+.metric-label {
+  font-size: .65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: .2rem;
+}
+
+.metric-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-value--accent { color: var(--accent); }
+.metric-value--danger { color: var(--danger); }
+
+/* ── Feed & Capsules ─────────────────────────────────────── */
+.feed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: .7rem;
+  color: var(--muted);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.feed-empty {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--muted);
+  font-size: .85rem;
+  font-style: italic;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+/* Capsule Card */
+.capsule {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.1rem 1.2rem .9rem;
+  position: relative;
+  transition: border-color .3s, transform .25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, filter, transform;
+  animation: capsule-enter .4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes capsule-enter {
+  from { opacity: 0; transform: translateY(-12px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .capsule.dying {
-  animation: capsule-out .4s cubic-bezier(.55,.06,.68,.19) forwards;
+  animation: capsule-exit .5s cubic-bezier(0.7, 0, 0.84, 0) forwards;
 }
 
-@keyframes capsule-out {
-  to { opacity: 0; transform: translateY(8px) scale(.95); filter: blur(6px); }
+@keyframes capsule-exit {
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.94);
+    filter: blur(8px);
+  }
 }
 
-.capsule-body {
-  font-size: .85rem;
-  line-height: 1.55;
-  margin-bottom: .65rem;
+.capsule.is-gazed {
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.08);
+}
+
+/* Dynamic Health Bar */
+.health-track {
+  height: 4px;
+  background: var(--surface-2);
+  border-radius: 2px;
+  margin-bottom: .9rem;
+  overflow: hidden;
+}
+
+.health-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width .15s linear, background-color .3s;
+  will-change: width;
+}
+
+/* Capsule Body */
+.capsule-content {
+  font-size: .95rem;
+  line-height: 1.65;
+  margin-bottom: .9rem;
   word-break: break-word;
   white-space: pre-wrap;
-  min-height: 1.2em;
+  min-height: 1.4em;
+  transition: filter .2s, opacity .2s;
 }
 
+/* Glitch Glyph Styling */
+.glitch-glyph {
+  color: var(--danger);
+  font-weight: 700;
+  display: inline-block;
+  opacity: .85;
+  text-shadow: 0 0 4px var(--danger);
+}
+
+/* Capsule Footer Meta */
 .capsule-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: .6rem;
+  font-size: .68rem;
   color: var(--muted);
-  letter-spacing: .04em;
+  letter-spacing: .06em;
   text-transform: uppercase;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding-top: .6rem;
 }
 
-.capsule-meta .timer {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.capsule-meta .status {
-  display: flex;
+.capsule-status {
+  display: inline-flex;
   align-items: center;
-  gap: .35rem;
+  gap: .45rem;
 }
 
 .status-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--muted);
   transition: background .3s;
 }
 
-.status-dot.healing {
+.status-dot.gazing {
   background: var(--accent);
-  box-shadow: 0 0 6px rgba(56,189,248,.5);
-  animation: pulse-dot 1.2s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--accent);
+  animation: pulse-dot 1.2s infinite;
 }
 
 @keyframes pulse-dot {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.4); }
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.35); opacity: 0.65; }
 }
 
-/* Health bar */
-.health-bar {
-  height: 3px;
-  background: var(--border);
-  border-radius: 2px;
-  margin-bottom: .55rem;
-  overflow: hidden;
+.capsule-timer {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
 }
 
-.health-bar-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width .25s linear, background .4s;
-  will-change: width;
-}
-
-/* Glitch text */
-.glitch-char {
-  color: var(--danger);
-  opacity: .7;
-}
-
-/* Noise flash overlay */
-.noise-flash {
+/* ── Noise Vignette / Entropy Flash ──────────────────────── */
+.entropy-vignette {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 9998;
-  background: rgba(239,68,68,.04);
+  background: radial-gradient(circle, transparent 40%, rgba(239, 68, 68, 0.15) 100%);
   opacity: 0;
-  transition: opacity .08s;
+  transition: opacity .1s ease-out;
 }
 
-.noise-flash.active { opacity: 1; }
+.entropy-vignette.flash {
+  opacity: 1;
+}
 
-/* ── Scrollbar ────────────────────────────────────────────── */
+/* ── Scrollbars ──────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-lit); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
-/* ── Responsive ───────────────────────────────────────────── */
-@media (max-width: 480px) {
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 520px) {
   html { font-size: 14px; }
-  .shell { padding: 1.25rem .75rem 4rem; }
-  .rules { flex-direction: column; align-items: center; }
+  .shell { padding: 1.5rem 1rem 5rem; }
+  .rules { flex-direction: column; }
+  .metrics { grid-template-columns: 1fr; gap: .5rem; }
 }
 </style>
 </head>
 <body>
 
-<div class="noise-flash" id="noiseFlash"></div>
+<div class="entropy-vignette" id="vignette"></div>
 
 <div class="shell">
   <!-- Header -->
   <header class="header">
+    <div class="logo-badge">Live Ledger &bull; Impermanence Engine</div>
     <h1>The Vigil</h1>
-    <p class="tagline">An experiment in digital impermanence</p>
+    <p class="tagline">Silence sustains life. Noise accelerates oblivion.</p>
     <div class="rules">
-      <div class="rule rule--heal">&#9678; Reading heals &mdash; your gaze restores life</div>
-      <div class="rule rule--kill">&#9632; Typing kills &mdash; every keystroke erodes all</div>
+      <div class="rule rule--heal">&#9678; Reading heals: gazing at a post restores +1.5s/s</div>
+      <div class="rule rule--kill">&#9632; Typing kills: every keystroke burns -0.5s from all</div>
     </div>
   </header>
 
   <!-- Composer -->
-  <div class="composer">
-    <textarea
-      id="composerInput"
-      placeholder="Deposit a thought. It will not last."
-      maxlength="500"
-    ></textarea>
-    <div class="composer-footer">
-      <span class="entropy-warn" id="entropyWarn">⚡ entropy ripple&hellip;</span>
-      <button id="postBtn" disabled>Transmit</button>
+  <section class="composer-wrapper">
+    <div class="composer-box">
+      <textarea
+        id="composerText"
+        class="composer-textarea"
+        placeholder="Deposit an impermanent thought... (Enter to transmit, Shift+Enter for newline)"
+        maxlength="500"
+        rows="3"
+      ></textarea>
+      <div class="composer-bar">
+        <span class="entropy-alert" id="entropyAlert">entropy noise: -0.5s to all</span>
+        <button id="transmitBtn" class="btn-transmit" disabled>Transmit</button>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Stats -->
-  <div class="stats">
-    <div>Active: <span id="statActive">0</span></div>
-    <div>Decayed: <span id="statDecayed">0</span></div>
-    <div>Healed: <span id="statHealed">0</span></div>
+  <!-- Metrics -->
+  <section class="metrics">
+    <div class="metric-card">
+      <div class="metric-label">Active Capsules</div>
+      <div class="metric-value metric-value--accent" id="statActive">0</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Total Lost To Decay</div>
+      <div class="metric-value metric-value--danger" id="statDecayed">0</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Life Restored</div>
+      <div class="metric-value" id="statHealed">0.0s</div>
+    </div>
+  </section>
+
+  <!-- Feed Header -->
+  <div class="feed-header">
+    <span>Active Ledger Feed</span>
+    <span id="feedStatus">Synchronized</span>
   </div>
 
   <!-- Feed -->
-  <div class="feed" id="feed">
-    <div class="feed-empty" id="feedEmpty">Nothing lives here yet. Transmit a thought.</div>
-  </div>
+  <main class="feed" id="feed">
+    <div class="feed-empty" id="feedEmpty">The ledger is empty. Speak into the void.</div>
+  </main>
 </div>
 
 <script>
 /* ════════════════════════════════════════════════════════════
-   THE VIGIL — State Engine
+   THE VIGIL — Core State & Simulation Engine
    ════════════════════════════════════════════════════════════ */
 (() => {
   'use strict';
 
-  // ── Config ─────────────────────────────────────────────────
+  // ── Configuration ──────────────────────────────────────────
   const CFG = Object.freeze({
-    DEFAULT_LIFESPAN : 60,       // seconds
-    MAX_LIFESPAN     : 90,       // ceiling for healing
-    HEAL_RATE        : 1.5,      // seconds restored per second of gaze
-    DECAY_RATE       : 1.0,      // seconds lost per second
-    NOISE_PENALTY    : 0.5,      // seconds lost per keystroke
-    TICK_MS          : 50,       // game-loop interval (20 Hz)
-    VISIBILITY_THRESH: 0.6,      // IntersectionObserver threshold
-    GLITCH_CHARS     : '█░▒▓~¤÷×¬∆Ξ'.split(''),
-    CORRUPTION_FLOOR : 0.19,     // lifespan % below which glitching starts
-    BLUR_FLOOR       : 0.49,     // lifespan % below which blur starts
+    DEFAULT_LIFESPAN : 60.0,     // Fresh post lifetime (seconds)
+    MAX_LIFESPAN     : 90.0,     // Healing ceiling
+    HEAL_RATE        : 1.5,      // Seconds recovered per second of active gaze
+    DECAY_RATE       : 1.0,      // Seconds lost per second of silence/neglect
+    NOISE_PENALTY    : 0.5,      // Seconds subtracted per keystroke from all posts
+    TICK_MS          : 50,       // Simulation rate (20 updates/second)
+    VIS_THRESHOLD    : 0.60,     // IntersectionObserver visibility threshold
+    BLUR_THRESHOLD   : 0.49,     // Below 49%: blur begins
+    GLITCH_THRESHOLD : 0.19,     // Below 19%: text corruption begins
+    GLYPHS           : ['█', '░', '▒', '▓', '~', '¤', '÷', '×', '¬', '∆', 'Ξ', '⌿', '⍝'],
   });
 
   // ── State ──────────────────────────────────────────────────
-  let posts     = [];            // { id, text, life, maxLife, visible, el, observer }
-  let postIdSeq = 0;
-  let decayed   = 0;
-  let healed    = 0;             // total seconds healed (integer)
-  let lastTick  = performance.now();
+  let posts = [];               // Active posts array
+  let postSeq = 0;
+  let statDecayed = 0;
+  let statHealed = 0.0;
+  let lastTick = performance.now();
 
-  // ── DOM refs ───────────────────────────────────────────────
-  const $feed        = document.getElementById('feed');
-  const $feedEmpty   = document.getElementById('feedEmpty');
-  const $input       = document.getElementById('composerInput');
-  const $postBtn     = document.getElementById('postBtn');
-  const $entropyWarn = document.getElementById('entropyWarn');
-  const $noiseFlash  = document.getElementById('noiseFlash');
-  const $statActive  = document.getElementById('statActive');
-  const $statDecayed = document.getElementById('statDecayed');
-  const $statHealed  = document.getElementById('statHealed');
+  // ── DOM References ─────────────────────────────────────────
+  const $feed         = document.getElementById('feed');
+  const $feedEmpty    = document.getElementById('feedEmpty');
+  const $composerText = document.getElementById('composerText');
+  const $transmitBtn  = document.getElementById('transmitBtn');
+  const $entropyAlert = document.getElementById('entropyAlert');
+  const $vignette     = document.getElementById('vignette');
+  const $statActive   = document.getElementById('statActive');
+  const $statDecayed  = document.getElementById('statDecayed');
+  const $statHealed   = document.getElementById('statHealed');
 
   // ── Helpers ────────────────────────────────────────────────
-  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
-  function healthColor(pct) {
-    if (pct > 0.5)  return `hsl(199, 92%, ${55 + (1 - pct) * 20}%)`;   // blue range
-    if (pct > 0.2)  return `hsl(${40 + (pct - 0.2) * 200}, 90%, 55%)`; // yellow range
-    return `hsl(${pct * 100}, 80%, ${45 + (1 - pct) * 15}%)`;           // red range
+  function escapeHtml(str) {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
+  // Calculate dynamic color: Blue -> Yellow -> Red
+  function getHealthColor(pct) {
+    if (pct > 0.50) {
+      // 100% -> 50%: Cyan/Blue range
+      const ratio = (pct - 0.50) / 0.50; // 0 -> 1
+      return `hsl(199, 95%, ${48 + ratio * 8}%)`;
+    } else if (pct > 0.20) {
+      // 50% -> 20%: Amber/Yellow range
+      const ratio = (pct - 0.20) / 0.30; // 0 -> 1
+      const hue = 42 + ratio * 30;       // ~42 (amber) to 72 (yellow)
+      return `hsl(${hue}, 95%, 52%)`;
+    } else {
+      // 20% -> 0%: Danger Red range
+      const ratio = pct / 0.20;          // 0 -> 1
+      return `hsl(${0 + ratio * 15}, 90%, 55%)`;
+    }
+  }
+
+  // Procedural text glitch corruption
   function corruptText(original, pct) {
-    const corruption = 1 - (pct / CFG.CORRUPTION_FLOOR); // 0 → 1
+    // corruption intensity: 0 when pct = 0.19, up to 1.0 when pct = 0
+    const intensity = 1.0 - (pct / CFG.GLITCH_THRESHOLD);
     const chars = [...original];
-    let out = '';
+    let output = '';
+
     for (let i = 0; i < chars.length; i++) {
-      if (chars[i] === '\n') { out += '\n'; continue; }
-      if (Math.random() < corruption * 0.45) {
-        const g = CFG.GLITCH_CHARS[Math.random() * CFG.GLITCH_CHARS.length | 0];
-        out += `<span class="glitch-char">${g}</span>`;
+      const ch = chars[i];
+      if (ch === '\n') { output += '\n'; continue; }
+      if (ch === ' ' && Math.random() > intensity * 0.4) { output += ' '; continue; }
+
+      // Probability of corruption increases with intensity
+      if (Math.random() < intensity * 0.50) {
+        const glyph = CFG.GLYPHS[Math.floor(Math.random() * CFG.GLYPHS.length)];
+        output += `<span class="glitch-glyph">${glyph}</span>`;
       } else {
-        out += escapeHtml(chars[i]);
+        output += escapeHtml(ch);
       }
     }
-    return out;
+    return output;
   }
 
-  function escapeHtml(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+  // ── Post Creation ──────────────────────────────────────────
+  function addPost(text, initialLife = CFG.DEFAULT_LIFESPAN) {
+    const id = ++postSeq;
+    const life = initialLife;
 
-  // ── Post creation ──────────────────────────────────────────
-  function createPost(text) {
-    const id  = ++postIdSeq;
-    const life = CFG.DEFAULT_LIFESPAN;
-
-    // Build DOM
     const el = document.createElement('article');
     el.className = 'capsule';
     el.dataset.id = id;
+
     el.innerHTML = `
-      <div class="health-bar"><div class="health-bar-fill"></div></div>
-      <div class="capsule-body"></div>
+      <div class="health-track">
+        <div class="health-fill"></div>
+      </div>
+      <div class="capsule-content"></div>
       <div class="capsule-meta">
-        <div class="status"><span class="status-dot"></span><span class="status-label">decaying</span></div>
-        <span class="timer">${life.toFixed(1)}s</span>
-      </div>`;
+        <div class="capsule-status">
+          <span class="status-dot"></span>
+          <span class="status-text">DECAYING</span>
+        </div>
+        <span class="capsule-timer">${life.toFixed(1)}s</span>
+      </div>
+    `;
 
-    // Cache inner refs
     const refs = {
-      body    : el.querySelector('.capsule-body'),
-      fill    : el.querySelector('.health-bar-fill'),
-      timer   : el.querySelector('.timer'),
-      dot     : el.querySelector('.status-dot'),
-      label   : el.querySelector('.status-label'),
+      fill: el.querySelector('.health-fill'),
+      content: el.querySelector('.capsule-content'),
+      statusDot: el.querySelector('.status-dot'),
+      statusText: el.querySelector('.status-text'),
+      timer: el.querySelector('.capsule-timer'),
     };
-    refs.body.textContent = text;     // safe initial render
-    refs.fill.style.width = '100%';
-    refs.fill.style.background = healthColor(1);
 
-    // IntersectionObserver per post
+    refs.content.textContent = text;
+    const initialPct = clamp(life / CFG.DEFAULT_LIFESPAN, 0, 1);
+    refs.fill.style.width = `${initialPct * 100}%`;
+    refs.fill.style.backgroundColor = getHealthColor(initialPct);
+
+    // Gaze tracking via IntersectionObserver
     const observer = new IntersectionObserver(entries => {
-      const post = posts.find(p => p.id === id);
-      if (post) post.visible = entries[0].intersectionRatio >= CFG.VISIBILITY_THRESH;
-    }, { threshold: [0, CFG.VISIBILITY_THRESH, 1] });
+      const entry = entries[0];
+      const target = posts.find(p => p.id === id);
+      if (target) {
+        target.isGazed = entry.isIntersecting && entry.intersectionRatio >= CFG.VIS_THRESHOLD;
+        if (target.isGazed) {
+          el.classList.add('is-gazed');
+        } else {
+          el.classList.remove('is-gazed');
+        }
+      }
+    }, {
+      threshold: [0, CFG.VIS_THRESHOLD, 1.0],
+    });
 
     observer.observe(el);
 
-    // Prepend to feed
     $feed.prepend(el);
     $feedEmpty.style.display = 'none';
 
-    const post = { id, text, life, maxLife: life, visible: false, el, refs, observer };
-    posts.unshift(post);
-    updateStats();
+    const postObj = {
+      id,
+      text,
+      life,
+      isGazed: false,
+      el,
+      refs,
+      observer,
+      isClean: true,
+    };
+
+    posts.unshift(postObj);
+    updateMetrics();
+    return postObj;
   }
 
-  // ── Post removal ───────────────────────────────────────────
-  function killPost(post) {
+  // ── Post Destruction ───────────────────────────────────────
+  function destroyPost(post) {
     post.observer.disconnect();
     post.el.classList.add('dying');
+
     post.el.addEventListener('animationend', () => {
       post.el.remove();
-      if (posts.length === 0) $feedEmpty.style.display = '';
+      if (posts.length === 0) {
+        $feedEmpty.style.display = '';
+      }
     }, { once: true });
+
     posts = posts.filter(p => p.id !== post.id);
-    decayed++;
-    updateStats();
+    statDecayed++;
+    updateMetrics();
   }
 
-  // ── Stats ──────────────────────────────────────────────────
-  function updateStats() {
-    $statActive.textContent  = posts.length;
-    $statDecayed.textContent = decayed;
-    $statHealed.textContent  = healed.toFixed(0) + 's';
+  // ── Metrics Update ─────────────────────────────────────────
+  function updateMetrics() {
+    $statActive.textContent = posts.length;
+    $statDecayed.textContent = statDecayed;
+    $statHealed.textContent = `${statHealed.toFixed(1)}s`;
   }
 
-  // ── Game Loop (fixed-step accumulator) ─────────────────────
-  let accumulator = 0;
-
-  function tick() {
+  // ── Game Loop (Delta-Time Compensated) ──────────────────────
+  function gameLoop() {
     const now = performance.now();
-    const rawDt = (now - lastTick) / 1000;            // real seconds elapsed
+    const dt = Math.min((now - lastTick) / 1000, 0.2); // clamp lag spikes
     lastTick = now;
 
-    // Guard against huge dt when tab was backgrounded
-    const dt = Math.min(rawDt, 0.25);
+    const dead = [];
 
-    // Process each post
-    const toRemove = [];
-
-    for (let i = posts.length - 1; i >= 0; i--) {
+    for (let i = 0; i < posts.length; i++) {
       const p = posts[i];
 
-      if (p.visible) {
-        // Heal
-        p.life = clamp(p.life + CFG.HEAL_RATE * dt, 0, CFG.MAX_LIFESPAN);
-        healed += CFG.HEAL_RATE * dt;
+      if (p.isGazed) {
+        // Gaze Healing (+1.5s/s, decay frozen)
+        p.life = Math.min(p.life + CFG.HEAL_RATE * dt, CFG.MAX_LIFESPAN);
+        statHealed += CFG.HEAL_RATE * dt;
       } else {
-        // Decay
-        p.life = clamp(p.life - CFG.DECAY_RATE * dt, 0, CFG.MAX_LIFESPAN);
+        // Natural Decay (-1.0s/s)
+        p.life = Math.max(p.life - CFG.DECAY_RATE * dt, 0);
       }
 
       if (p.life <= 0) {
-        toRemove.push(p);
+        dead.push(p);
         continue;
       }
 
-      // ── Visual update ────────────────────────────────────
-      const pct = p.life / CFG.DEFAULT_LIFESPAN;       // can exceed 1 from healing
+      // Compute lifespan ratio
+      const pct = p.life / CFG.DEFAULT_LIFESPAN;
       const clampedPct = clamp(pct, 0, 1);
 
-      // Health bar
-      p.refs.fill.style.width      = (clampedPct * 100) + '%';
-      p.refs.fill.style.background = healthColor(clampedPct);
+      // 1. Health Bar
+      p.refs.fill.style.width = `${clampedPct * 100}%`;
+      p.refs.fill.style.backgroundColor = getHealthColor(clampedPct);
 
-      // Timer
-      p.refs.timer.textContent = p.life.toFixed(1) + 's';
+      // 2. Timer Label
+      p.refs.timer.textContent = `${p.life.toFixed(1)}s`;
 
-      // Status
-      if (p.visible) {
-        p.refs.dot.classList.add('healing');
-        p.refs.label.textContent = 'healing';
+      // 3. Status
+      if (p.isGazed) {
+        p.refs.statusDot.classList.add('gazing');
+        p.refs.statusText.textContent = 'HEALING (+1.5s/s)';
+        p.refs.statusText.style.color = 'var(--accent)';
       } else {
-        p.refs.dot.classList.remove('healing');
-        p.refs.label.textContent = 'decaying';
+        p.refs.statusDot.classList.remove('gazing');
+        p.refs.statusText.textContent = 'DECAYING';
+        p.refs.statusText.style.color = 'var(--muted)';
       }
 
-      // Blur + opacity (50% → 20%)
-      if (clampedPct < CFG.BLUR_FLOOR) {
-        const intensity = 1 - (clampedPct / CFG.BLUR_FLOOR);  // 0 → 1
-        p.el.style.filter  = `blur(${intensity * 2.5}px)`;
-        p.el.style.opacity = clamp(0.35 + (1 - intensity) * 0.65, 0.35, 1);
+      // 4. Procedural Visual Decay
+      if (clampedPct < CFG.BLUR_THRESHOLD) {
+        // 49% - 20%: progressive CSS blur & opacity fade
+        const blurNorm = 1.0 - (clampedPct / CFG.BLUR_THRESHOLD);
+        const blurPx = (blurNorm * 3.2).toFixed(2);
+        const opacity = (0.38 + (1.0 - blurNorm) * 0.62).toFixed(2);
+        p.refs.content.style.filter = `blur(${blurPx}px)`;
+        p.refs.content.style.opacity = opacity;
       } else {
-        p.el.style.filter  = 'none';
-        p.el.style.opacity = '1';
+        // 100% - 50%: pristine
+        p.refs.content.style.filter = 'none';
+        p.refs.content.style.opacity = '1';
       }
 
-      // Glitch text (below 20%)
-      if (clampedPct < CFG.CORRUPTION_FLOOR) {
-        p.refs.body.innerHTML = corruptText(p.text, clampedPct);
-      } else if (p.refs.body.innerHTML !== escapeHtml(p.text).replace(/\n/g, '\n')) {
-        // Restore clean text once healed back above threshold
-        p.refs.body.textContent = p.text;
+      // 5. Procedural Text Corruption
+      if (clampedPct < CFG.GLITCH_THRESHOLD) {
+        // 19% - 1%: glitch characters
+        p.refs.content.innerHTML = corruptText(p.text, clampedPct);
+        p.isClean = false;
+      } else if (!p.isClean) {
+        // Restore pristine text if healed back above 19%
+        p.refs.content.textContent = p.text;
+        p.isClean = true;
       }
     }
 
-    // Remove dead posts
-    for (const p of toRemove) killPost(p);
-    if (posts.length > 0 || toRemove.length > 0) updateStats();
+    // Clean up dead capsules
+    for (const d of dead) {
+      destroyPost(d);
+    }
+
+    if (dead.length > 0) {
+      updateMetrics();
+    }
   }
 
-  // Use setInterval for consistent ticking even when tab is throttled
-  setInterval(tick, CFG.TICK_MS);
+  // Start 20 Hz simulation
+  setInterval(gameLoop, CFG.TICK_MS);
 
-  // ── Composer ───────────────────────────────────────────────
-  $input.addEventListener('input', () => {
-    $postBtn.disabled = $input.value.trim().length === 0;
-  });
+  // ── Entropy Destruction (Typing Mechanic) ───────────────────
+  let entropyTimeout = 0;
 
-  // Entropy mechanic — keydown on the textarea
-  let entropyTimer = 0;
-  $input.addEventListener('keydown', e => {
-    // Ignore modifier-only and navigation keys
-    if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta'
-        || e.key === 'Tab' || e.key === 'CapsLock' || e.key === 'Escape'
-        || e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End'
-        || e.key === 'PageUp' || e.key === 'PageDown') return;
+  function triggerEntropy() {
+    if (posts.length === 0) return;
 
-    // Submit on Enter
+    // Apply -0.5s penalty to ALL posts
+    for (let i = 0; i < posts.length; i++) {
+      posts[i].life = Math.max(0, posts[i].life - CFG.NOISE_PENALTY);
+    }
+
+    // Visual red vignette pulse and alert badge
+    $vignette.classList.add('flash');
+    $entropyAlert.classList.add('active');
+
+    clearTimeout(entropyTimeout);
+    entropyTimeout = setTimeout(() => {
+      $vignette.classList.remove('flash');
+      $entropyAlert.classList.remove('active');
+    }, 130);
+  }
+
+  // Keydown listener on the composer
+  $composerText.addEventListener('keydown', e => {
+    // Ignore non-character modifier keys
+    const ignored = [
+      'Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Escape',
+      'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+      'Home', 'End', 'PageUp', 'PageDown'
+    ];
+    if (ignored.includes(e.key)) return;
+
+    // Enter without Shift transmits
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      submitPost();
+      transmitCurrentThought();
       return;
     }
 
-    // Noise penalty
-    if (posts.length === 0) return;
-    for (const p of posts) {
-      p.life = clamp(p.life - CFG.NOISE_PENALTY, 0, CFG.MAX_LIFESPAN);
-    }
-
-    // Visual feedback
-    $noiseFlash.classList.add('active');
-    $entropyWarn.classList.add('visible');
-    clearTimeout(entropyTimer);
-    entropyTimer = setTimeout(() => {
-      $noiseFlash.classList.remove('active');
-      $entropyWarn.classList.remove('visible');
-    }, 120);
+    // Every keystroke generates noise entropy
+    triggerEntropy();
   });
 
-  function submitPost() {
-    const text = $input.value.trim();
+  $composerText.addEventListener('input', () => {
+    $transmitBtn.disabled = $composerText.value.trim().length === 0;
+  });
+
+  function transmitCurrentThought() {
+    const text = $composerText.value.trim();
     if (!text) return;
-    createPost(text);
-    $input.value = '';
-    $postBtn.disabled = true;
-    $input.focus();
+    addPost(text, CFG.DEFAULT_LIFESPAN);
+    $composerText.value = '';
+    $transmitBtn.disabled = true;
+    $composerText.focus();
   }
 
-  $postBtn.addEventListener('click', submitPost);
+  $transmitBtn.addEventListener('click', transmitCurrentThought);
 
-  // ── Keyboard shortcut hint ─────────────────────────────────
-  $input.setAttribute('title', 'Press Enter to transmit, Shift+Enter for newline');
+  // ── Pre-seed Initial Capsules ──────────────────────────────
+  // Demonstrates all 3 stages of life immediately upon opening:
+  addPost("Silence is the only vessel strong enough to carry memory.", 58.0);
+  addPost("The words begin to lose their borders in the dimming light.", 27.0);
+  addPost("Fragments dissolve into static as the noise draws near.", 8.5);
+
 })();
 </script>
 </body>
 </html>
-
