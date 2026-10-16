@@ -2,146 +2,85 @@
 
 > An experiment in digital impermanence.
 
-**The Vigil** is an anti-social media ledger where posts are living entities that decay over time. Silence keeps them alive. Noise destroys them.
-
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
-![Flask](https://img.shields.io/badge/Flask-3.x-000000?logo=flask)
-![License](https://img.shields.io/badge/License-MIT-green)
+**The Vigil** is an anti-social media ledger based on digital impermanence. Posts are not permanent; they are living entities that decay over time. Silence keeps them alive; noise actively destroys them.
 
 ---
 
 ## Core Mechanics
 
-| Mechanic | How it works |
+| Mechanic | How it Works |
 |---|---|
-| **Time-Bombed Posts** | Every post starts with a 60-second lifespan. A server-side game loop ticks down every post by 1 second per second. Lifespan hits 0 → post is permanently deleted. |
-| **Gaze Tracking (Healing)** | `IntersectionObserver` tracks if a post is visible in your viewport. If you're reading it, its timer freezes and restores **+1.5s per second**, up to a 90s ceiling. |
-| **Entropy (Destruction)** | Every keystroke in the composer subtracts **0.5s from every living post**. The more you type, the faster everything dies. |
-| **Visual Decay** | **100–50%**: pristine. **49–20%**: progressive CSS blur + opacity fade. **Below 20%**: characters randomly replaced with glitch glyphs (`█░▒▓~`). |
+| **Time-Bombed Posts** | Every new post starts with a **60.0s** lifespan. A 20Hz game loop ticks down each post by 1s/s. When it reaches 0s, it is permanently deleted from DOM and memory. |
+| **Gaze Tracking (Healing)** | `IntersectionObserver` monitors if a post is &ge; 60% in your viewport. When looked at, decay is frozen and its lifespan is restored at **+1.5s per second** (up to 90s). |
+| **Entropy (Destruction)** | Keystrokes in the composer area trigger a noise penalty that subtracts **0.5s from EVERY post** on the feed, flashing an entropy alert and red vignette. |
+| **Procedural Visual Decay** | &bull; **100%–50%**: Crisp monospace text.<br>&bull; **49%–20%**: Progressive CSS `blur()` and fading opacity.<br>&bull; **19%–1%**: Procedural text corruption replacing letters with unicode glitch glyphs (`█`, `░`, `▒`, `▓`, `~`, `¤`, `∆`). When healed back above 20%, clean text is restored! |
+| **Dynamic Health Bar** | Transitions from Cyan/Blue (>50%) &rarr; Amber/Yellow (20%–50%) &rarr; Red Danger (<20%). |
 
-## Architecture
+---
 
-```
-┌─────────────────────────────────┐
-│  Python Server  (app.py)        │
-│  Flask + SocketIO               │
-│                                 │
-│  • Game loop (20 Hz thread)     │
-│  • All state lives here         │
-│  • Broadcasts at 10 Hz          │
-├─────────────────────────────────┤
-│         WebSocket (SocketIO)    │
-├─────────────────────────────────┤
-│  Browser Client                 │
-│  (templates/index.html)         │
-│                                 │
-│  • Thin rendering layer         │
-│  • IntersectionObserver → vis   │
-│  • Keystroke batching → entropy │
-│  • Visual decay effects         │
-└─────────────────────────────────┘
-```
+## How to Deploy to GitHub
 
-Multiple browser tabs share the same living feed — the Python server is the single source of truth.
+### Option 1: Streamlit Community Cloud (What you had in your screenshot)
 
-## Quick Start
+1. Commit and push all files in this directory to your GitHub repository:
+   ```bash
+   git add -A
+   git commit -m "Deploy The Vigil"
+   git push origin main
+   ```
+2. Go to [share.streamlit.io](https://share.streamlit.io).
+3. Click **New app** &rarr; Select your GitHub repository &rarr; Set main file path to: `app.py`.
+4. Click **Deploy!**
 
-### Prerequisites
+Your app will immediately build and run full-screen without errors.
 
-- Python 3.10+
+---
 
-### Run Locally
+### Option 2: GitHub Pages (1-Click Free Hosting)
 
+Because this repository contains a self-contained root `index.html`:
+
+1. Push your code to your GitHub repository.
+2. In your GitHub repository, click **Settings** (top tab).
+3. On the left sidebar, click **Pages**.
+4. Under **Build and deployment** &rarr; **Branch**:
+   - Select `main` (or `master`)
+   - Folder: `/ (root)`
+   - Click **Save**.
+5. Within 60 seconds, GitHub will give you a live URL:
+   `https://<your-username>.github.io/<your-repo-name>/`
+
+---
+
+### Option 3: Run Locally on Your Computer
+
+Simply run:
 ```bash
-# Clone the repo
-git clone https://github.com/YOUR_USERNAME/Vigil.git
-cd Vigil
-
-# Create a virtual environment (recommended)
-python -m venv venv
-source venv/bin/activate        # Linux/macOS
-venv\Scripts\activate           # Windows
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Start the server
 python app.py
 ```
+This automatically starts a local server and opens **http://localhost:5000** in your web browser.
 
-Open **http://127.0.0.1:5000** in your browser.
-
-## Deployment
-
-### Render (Recommended — Free Tier)
-
-1. Push this repo to GitHub
-2. Go to [render.com](https://render.com) → **New** → **Web Service**
-3. Connect your GitHub repo
-4. Render auto-detects `render.yaml` — click **Deploy**
-
-Or use the blueprint button:
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
-
-### Railway
-
-1. Push to GitHub
-2. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub**
-3. Railway auto-detects the `Dockerfile`
-4. Set environment variable: `PORT=5000`, `HOST=0.0.0.0`
-
-### Docker
-
+Alternatively, if you have Streamlit installed:
 ```bash
-docker build -t the-vigil .
-docker run -p 5000:5000 the-vigil
+streamlit run app.py
 ```
 
-### Heroku
-
-```bash
-heroku create the-vigil
-git push heroku main
-```
+---
 
 ## Project Structure
 
 ```
 Vigil/
-├── app.py                  # Flask + SocketIO server, game loop, all state
-├── templates/
-│   └── index.html          # Frontend (HTML + CSS + JS client)
-├── requirements.txt        # Python dependencies
-├── Procfile                # Heroku / Render start command
-├── Dockerfile              # Container deployment
-├── render.yaml             # Render.com one-click blueprint
-├── runtime.txt             # Python version pin
-├── .gitignore
-├── LICENSE
-└── README.md
+├── index.html       ← Complete, production-ready SPA (runs anywhere)
+├── app.py           ← Streamlit Cloud entrypoint + zero-dependency local runner
+├── requirements.txt ← Streamlit dependency for cloud builders
+├── render.yaml      ← Render.com deployment blueprint
+├── Dockerfile       ← Containerized deployment (Railway / Cloud Run)
+├── Procfile         ← Heroku / Render process configuration
+├── .gitignore       ← Ignores cache and temporary files
+└── README.md        ← Documentation and deployment guide
 ```
-
-## Configuration
-
-Tweak constants in `app.py`:
-
-| Variable | Default | Description |
-|---|---|---|
-| `DEFAULT_LIFESPAN` | `60.0` | Seconds a new post starts with |
-| `MAX_LIFESPAN` | `90.0` | Healing ceiling |
-| `HEAL_RATE` | `1.5` | Seconds restored per second of gaze |
-| `DECAY_RATE` | `1.0` | Seconds lost per second of neglect |
-| `NOISE_PENALTY` | `0.5` | Seconds lost per keystroke (all posts) |
-
-## Tech Stack
-
-- **Backend**: Python, Flask, Flask-SocketIO
-- **Transport**: WebSocket via Socket.IO
-- **Frontend**: Vanilla HTML/CSS/JS (no framework)
-- **Real-time**: Server-side game loop at 20 Hz, state broadcast at 10 Hz
 
 ## License
 
-[MIT](LICENSE)
-
+MIT License. Free to use, modify, and distribute.
