@@ -1,231 +1,119 @@
 """
 The Vigil — An experiment in digital impermanence.
 
-A real-time anti-social media ledger where posts decay over time.
-Reading heals. Typing kills.
-
-Run:
-    pip install -r requirements.txt
-    python app.py
-
-Then open http://127.0.0.1:5000
+Supports multiple deployment targets:
+1. Streamlit Community Cloud (via GitHub: `streamlit run app.py`)
+2. Local Python execution (`python app.py`)
+3. GitHub Pages (direct static hosting via root `index.html`)
 """
 
-import threading
-import time
+import os
+import sys
+from pathlib import Path
 
-from flask import Flask, render_template, request
-from flask_socketio import SocketIO
-
-# ═══════════════════════════════════════════════════════════════
-#  App & SocketIO setup
-# ═══════════════════════════════════════════════════════════════
-
-app = Flask(__name__)
-app.config["SECRET_KEY"] = "vigil-ephemeral"
-socketio = SocketIO(app, async_mode="threading")
-
-# ═══════════════════════════════════════════════════════════════
-#  Configuration
-# ═══════════════════════════════════════════════════════════════
-
-DEFAULT_LIFESPAN = 60.0     # seconds a new post starts with
-MAX_LIFESPAN     = 90.0     # ceiling for healing
-HEAL_RATE        = 1.5      # +seconds restored per second of gaze
-DECAY_RATE       = 1.0      # -seconds lost per second of neglect
-NOISE_PENALTY    = 0.5      # -seconds lost per keystroke (all posts)
-TICK_HZ          = 20       # internal simulation frequency
-EMIT_HZ          = 10       # state broadcast frequency to clients
-
-# ═══════════════════════════════════════════════════════════════
-#  Shared State  (guarded by `lock`)
-# ═══════════════════════════════════════════════════════════════
-
-lock = threading.Lock()
-
-posts: list[dict] = []          # [{id, text, life, maxLife}, ...]
-post_id_seq: int  = 0
-stats: dict       = {"decayed": 0, "healed": 0.0}
-client_vis: dict  = {}          # sid -> set of visible post IDs
-
-# ═══════════════════════════════════════════════════════════════
-#  Routes
-# ═══════════════════════════════════════════════════════════════
-
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-# ═══════════════════════════════════════════════════════════════
-#  SocketIO Event Handlers
-# ═══════════════════════════════════════════════════════════════
-
-@socketio.on("connect")
-def on_connect():
-    """Register a new client and send current state."""
-    sid = request.sid
-    with lock:
-        client_vis[sid] = set()
-        payload = _build_state()
-    socketio.emit("state", payload, to=sid)
+BASE_DIR = Path(__file__).resolve().parent
+INDEX_HTML_PATH = BASE_DIR / "index.html"
 
 
-@socketio.on("disconnect")
-def on_disconnect():
-    """Clean up client visibility tracking."""
-    with lock:
-        client_vis.pop(request.sid, None)
+def load_html() -> str:
+    """Read the self-contained Vigil application HTML."""
+    if INDEX_HTML_PATH.exists():
+        return INDEX_HTML_PATH.read_text(encoding="utf-8")
+    return "<h1>Error: index.html not found.</h1>"
 
 
-@socketio.on("post")
-def on_post(data):
-    """Handle a new post submission."""
-    global post_id_seq
+def run_streamlit_app():
+    """Renders The Vigil inside Streamlit (Community Cloud or local)."""
+    import streamlit as st
+    import streamlit.components.v1 as components
 
-    text = (data.get("text") or "").strip()
-    if not text:
-        return
-    text = text[:500]
+    st.set_page_config(
+        page_title="The Vigil",
+        page_icon="🕯️",
+        layout="wide",
+        initial_sidebar_state="collapsed",
+    )
 
-    with lock:
-        post_id_seq += 1
-        posts.insert(0, {
-            "id":      post_id_seq,
-            "text":    text,
-            "life":    DEFAULT_LIFESPAN,
-            "maxLife": DEFAULT_LIFESPAN,
-        })
+    # Clean styling to remove default Streamlit padding and headers
+    st.markdown(
+        """
+        <style>
+        #MainMenu, header, footer {
+            visibility: hidden;
+            display: none !important;
+        }
+        .block-container {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+        }
+        iframe {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            border: none !important;
+            z-index: 999999;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    html_code = load_html()
+    components.html(html_code, height=950, scrolling=True)
 
 
-@socketio.on("keys")
-def on_keys(data):
-    """Handle batched keystroke entropy from a client."""
-    count = int(data.get("n", 1))
-    count = max(1, min(count, 50))          # cap to prevent abuse
+def run_local_server(port: int = 5000):
+    """Fallback: Zero-dependency local web server for `python app.py`."""
+    import http.server
+    import socketserver
+    import webbrowser
 
-    with lock:
-        penalty = NOISE_PENALTY * count
-        for p in posts:
-            p["life"] = max(p["life"] - penalty, 0)
-
-
-@socketio.on("vis")
-def on_vis(data):
-    """Update which posts a specific client can see."""
-    ids = data.get("ids", [])
-    with lock:
-        client_vis[request.sid] = set(ids)
-
-# ═══════════════════════════════════════════════════════════════
-#  State Builder
-# ═══════════════════════════════════════════════════════════════
-
-def _build_state(dying_ids=None):
-    """Serialize current state. Must be called under `lock`."""
-    return {
-        "posts": [
-            {
-                "id":      p["id"],
-                "text":    p["text"],
-                "life":    round(p["life"], 2),
-                "maxLife": p["maxLife"],
-            }
-            for p in posts
-        ],
-        "dying":   dying_ids or [],
-        "active":  len(posts),
-        "decayed": stats["decayed"],
-        "healed":  int(stats["healed"]),
-    }
-
-# ═══════════════════════════════════════════════════════════════
-#  Core Game Loop  (background thread)
-# ═══════════════════════════════════════════════════════════════
-
-def game_loop():
-    """
-    Runs continuously at TICK_HZ.
-
-    Each tick:
-      - Heal posts that any connected client can see.
-      - Decay posts that no client can see.
-      - Remove posts whose lifespan reaches zero.
-      - Broadcast state to all clients at EMIT_HZ.
-    """
-    last_tick = time.monotonic()
-    last_emit = 0.0
-    emit_interval = 1.0 / EMIT_HZ
-    tick_interval  = 1.0 / TICK_HZ
-
-    while True:
-        socketio.sleep(tick_interval)
-
-        now = time.monotonic()
-        dt  = min(now - last_tick, 0.25)    # clamp large gaps (tab-away)
-        last_tick = now
-
-        with lock:
-            # ── Aggregate visibility across all clients ──
-            visible: set = set()
-            for v in client_vis.values():
-                visible.update(v)
-
-            # ── Update every post ──
-            dying: list[int] = []
-
-            for p in posts:
-                if p["id"] in visible:
-                    # Healing — gaze restores life
-                    p["life"] = min(p["life"] + HEAL_RATE * dt, MAX_LIFESPAN)
-                    stats["healed"] += HEAL_RATE * dt
-                else:
-                    # Decay — silence erodes life
-                    p["life"] = max(p["life"] - DECAY_RATE * dt, 0)
-
-                if p["life"] <= 0:
-                    dying.append(p["id"])
-
-            # ── Reap dead posts ──
-            if dying:
-                dying_set = set(dying)
-                posts[:] = [p for p in posts if p["id"] not in dying_set]
-                stats["decayed"] += len(dying)
-
-            # ── Broadcast (throttled) ──
-            payload = None
-            if now - last_emit >= emit_interval:
-                payload = _build_state(dying)
-                last_emit = now
-
-        # Emit outside the lock
-        if payload is not None:
-            socketio.emit("state", payload)
-
-# ═══════════════════════════════════════════════════════════════
-#  Entry Point
-# ═══════════════════════════════════════════════════════════════
-
-if __name__ == "__main__":
-    import os
-
-    port = int(os.environ.get("PORT", 5000))
-    host = os.environ.get("HOST", "127.0.0.1")
-
-    socketio.start_background_task(game_loop)
+    os.chdir(BASE_DIR)
+    handler = http.server.SimpleHTTPRequestHandler
 
     print()
     print("  +==========================================+")
     print("  |        T H E   V I G I L                 |")
     print("  |                                          |")
-    print(f"  |   -> http://{host}:{port:<24}|")
+    print(f"  |   -> http://localhost:{port:<19}|")
     print("  |   Reading heals.  Typing kills.          |")
     print("  +==========================================+")
     print()
 
-    socketio.run(
-        app,
-        host=host,
-        port=port,
-        debug=False,
-        allow_unsafe_werkzeug=True,
-    )
+    webbrowser.open(f"http://localhost:{port}")
+
+    with socketserver.TCPServer(("", port), handler) as httpd:
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\nShutting down The Vigil server.")
+
+
+# ─────────────────────────────────────────────────────────────
+# Execution Entry Point
+# ─────────────────────────────────────────────────────────────
+
+# Detect if Streamlit is executing this file (Streamlit sets special module flags)
+is_streamlit = (
+    "streamlit" in sys.modules
+    or any("streamlit" in arg for arg in sys.argv)
+    or os.environ.get("STREAMLIT_SERVER_PORT") is not None
+)
+
+if is_streamlit:
+    run_streamlit_app()
+elif __name__ == "__main__":
+    # If executed as `python app.py` directly:
+    try:
+        import streamlit
+        from streamlit.web import cli as stcli
+
+        sys.argv = ["streamlit", "run", str(Path(__file__).resolve())]
+        sys.exit(stcli.main())
+    except ImportError:
+        # If streamlit is not installed locally, use Python's built-in web server
+        port = int(os.environ.get("PORT", 5000))
+        run_local_server(port=port)
