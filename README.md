@@ -1,45 +1,119 @@
-# The Vigil
+"""
+The Vigil — An experiment in digital impermanence.
 
-> An experimental, anti-social media platform built on the concept of digital impermanence.
+Supports multiple deployment targets:
+1. Streamlit Community Cloud (via GitHub: `streamlit run app.py`)
+2. Local Python execution (`python app.py`)
+3. GitHub Pages (direct static hosting via root `index.html`)
+"""
 
-Unlike traditional networks that reward endless scrolling, likes, and permanent noise, **The Vigil** treats digital thoughts as fragile entities that must be actively protected through silent attention.
+import os
+import sys
+from pathlib import Path
 
----
+BASE_DIR = Path(__file__).resolve().parent
+INDEX_HTML_PATH = BASE_DIR / "index.html"
 
-### Core Mechanics & Capabilities
 
-* **Ephemeral Time-Capsules (The Timer):** Every message deposited into the ledger begins with a strict countdown timer (60 seconds). Once a post's timer reaches zero, it is permanently purged from the system and the interface without any backups or archives.
-* **Gaze-Powered Sustenance (The Healing Mechanic):** The platform utilizes viewport tracking (`IntersectionObserver`) to detect what the user is actively reading. If a user holds a post on their screen in complete silence, this passive attention acts as a shield. It freezes the decay timer and slowly regenerates the post's lifespan (+1.5s/s).
-* **Global Entropy Penalty (The Destruction Mechanic):** Interaction is punished rather than rewarded. Anytime a user begins typing to deposit a new thought, their keystrokes generate "noise." This noise triggers a global penalty, instantly draining the lifespan of every other active post currently on the ledger (-0.5s per keystroke).
-* **Procedural Visual Decay (The Glitch Effect):** As a post loses its lifespan, it visually degrades to reflect its dying state:
-  * **100% – 50% Lifespan**: High-contrast, pristine text.
-  * **49% – 20% Lifespan**: Progressive optical blur and opacity fade.
-  * **19% – 0% Lifespan**: Text corruption into unreadable unicode glyphs (`█`, `░`, `▒`, `▓`, `~`). When healed back above 20%, clean text is restored!
+def load_html() -> str:
+    """Read the self-contained Vigil application HTML."""
+    if INDEX_HTML_PATH.exists():
+        return INDEX_HTML_PATH.read_text(encoding="utf-8")
+    return "<h1>Error: index.html not found.</h1>"
 
----
 
-### The User Experience
+def run_streamlit_app():
+    """Renders The Vigil inside Streamlit (Community Cloud or local)."""
+    import streamlit as st
+    import streamlit.components.v1 as components
 
-* **Zero Vanity Metrics:** There are no likes, follower counts, share buttons, or comment threads. The only metric is the survival integrity (time remaining) of a thought.
-* **Minimalist Interface:** Designed with a stark, dark-mode terminal aesthetic (`#0a0a0c`, `#38bdf8`, `#ef4444`). This emphasizes the text itself and the color-coded progress bars (shifting from Blue &rarr; Yellow &rarr; Red) that indicate the health of each capsule.
-* **Collective Responsibility:** The mechanics force a cooperative dilemma. Users must decide whether their desire to speak (type a new post) is worth actively destroying the thoughts others have left behind, fostering a highly intentional, quiet, and mindful digital environment.
+    st.set_page_config(
+        page_title="The Vigil",
+        page_icon="🕯️",
+        layout="wide",
+        initial_sidebar_state="collapsed",
+    )
 
----
+    # Clean styling to remove default Streamlit padding and headers
+    st.markdown(
+        """
+        <style>
+        #MainMenu, header, footer {
+            visibility: hidden;
+            display: none !important;
+        }
+        .block-container {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+        }
+        iframe {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            border: none !important;
+            z-index: 999999;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
-### Deployment (Streamlit Cloud via GitHub)
+    html_code = load_html()
+    components.html(html_code, height=950, scrolling=True)
 
-1. Commit and push these updated files to your GitHub repository:
-   - `app.py`
-   - `index.html`
-   - `requirements.txt`
-   - `README.md`
-2. In your Streamlit Cloud tab, open **`< Manage app`** in the bottom-right &rarr; click **⋮** &rarr; **Reboot app**.
 
----
+def run_local_server(port: int = 5000):
+    """Fallback: Zero-dependency local web server for `python app.py`."""
+    import http.server
+    import socketserver
+    import webbrowser
 
-### Run Locally
+    os.chdir(BASE_DIR)
+    handler = http.server.SimpleHTTPRequestHandler
 
-```bash
-python app.py
-```
-Starts a local server and opens **http://localhost:5000** in your browser.
+    print()
+    print("  +==========================================+")
+    print("  |        T H E   V I G I L                 |")
+    print("  |                                          |")
+    print(f"  |   -> http://localhost:{port:<19}|")
+    print("  |   Reading heals.  Typing kills.          |")
+    print("  +==========================================+")
+    print()
+
+    webbrowser.open(f"http://localhost:{port}")
+
+    with socketserver.TCPServer(("", port), handler) as httpd:
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\nShutting down The Vigil server.")
+
+
+# ─────────────────────────────────────────────────────────────
+# Execution Entry Point
+# ─────────────────────────────────────────────────────────────
+
+# Detect if Streamlit is executing this file (Streamlit sets special module flags)
+is_streamlit = (
+    "streamlit" in sys.modules
+    or any("streamlit" in arg for arg in sys.argv)
+    or os.environ.get("STREAMLIT_SERVER_PORT") is not None
+)
+
+if is_streamlit:
+    run_streamlit_app()
+elif __name__ == "__main__":
+    # If executed as `python app.py` directly:
+    try:
+        import streamlit
+        from streamlit.web import cli as stcli
+
+        sys.argv = ["streamlit", "run", str(Path(__file__).resolve())]
+        sys.exit(stcli.main())
+    except ImportError:
+        # If streamlit is not installed locally, use Python's built-in web server
+        port = int(os.environ.get("PORT", 5000))
+        run_local_server(port=port)
