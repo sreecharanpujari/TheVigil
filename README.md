@@ -1,53 +1,45 @@
 # The Vigil
 
-> An experiment in digital impermanence.
+> An experimental, anti-social media platform built on the concept of digital impermanence.
 
-**The Vigil** is an autonomous anti-social media ledger based on digital impermanence. Thoughts are living entities that decay over time. Silence and focused gaze sustain them; voices, noise, typing, and tab-switching burn them away.
-
----
-
-## Core Mechanics
-
-| Mechanic | Implementation & Severity |
-|---|---|
-| **Accelerated Lifespan** | Every new post starts with a **30.0s** lifespan (decreased from 60s for intense impermanence). Reaching 0s permanently destroys the post. |
-| **Acoustic Surveillance** | Uses the **Web Audio API** and real-time RMS frequency analysis. If ambient voices, talking, or loud noises are detected, a voice breach triggers, inflicting **-1.5s immediately to every post**. |
-| **Cognitive Attention Lock** | Uses `Page Visibility API` and `window.blur`. If you switch to another app (Discord, WhatsApp, browser tabs), an **Abandonment Breach** engages, burning **-4.0s per second** from all posts until focus returns. |
-| **Typing Entropy** | Every character typed into the composer area penalizes **all posts by -0.8s**, triggering a red vignette alert. |
-| **Gaze Tracking (Healing)** | Looking steadily at a post (&ge; 60% in viewport) freezes decay and restores **+1.5s per second** up to a 50s ceiling. |
-| **Procedural Visual Decay** | &bull; **100%–50%**: Crisp monospace text.<br>&bull; **49%–20%**: Progressive CSS `blur()` and opacity fade.<br>&bull; **19%–0%**: Procedural text corruption replacing characters with unicode glitch glyphs (`█`, `░`, `▒`, `▓`, `~`, `¤`, `∆`). When healed back above 20%, clean text is restored! |
-| **Telemetry HUD** | Real-time decibel VU meter, Attention Lock monitor, and Gaze counter. |
+Unlike traditional networks that reward endless scrolling, likes, and permanent noise, **The Vigil** treats digital thoughts as fragile entities that must be actively protected through silent attention.
 
 ---
 
-## How to Deploy to GitHub (Option A: Streamlit Cloud)
+### Core Mechanics & Capabilities
 
-1. Open your repository on GitHub.
-2. Click **Add file** &rarr; **Upload files**.
-3. Upload the updated files:
+* **Ephemeral Time-Capsules (The Timer):** Every message deposited into the ledger begins with a strict countdown timer (60 seconds). Once a post's timer reaches zero, it is permanently purged from the system and the interface without any backups or archives.
+* **Gaze-Powered Sustenance (The Healing Mechanic):** The platform utilizes viewport tracking (`IntersectionObserver`) to detect what the user is actively reading. If a user holds a post on their screen in complete silence, this passive attention acts as a shield. It freezes the decay timer and slowly regenerates the post's lifespan (+1.5s/s).
+* **Global Entropy Penalty (The Destruction Mechanic):** Interaction is punished rather than rewarded. Anytime a user begins typing to deposit a new thought, their keystrokes generate "noise." This noise triggers a global penalty, instantly draining the lifespan of every other active post currently on the ledger (-0.5s per keystroke).
+* **Procedural Visual Decay (The Glitch Effect):** As a post loses its lifespan, it visually degrades to reflect its dying state:
+  * **100% – 50% Lifespan**: High-contrast, pristine text.
+  * **49% – 20% Lifespan**: Progressive optical blur and opacity fade.
+  * **19% – 0% Lifespan**: Text corruption into unreadable unicode glyphs (`█`, `░`, `▒`, `▓`, `~`). When healed back above 20%, clean text is restored!
+
+---
+
+### The User Experience
+
+* **Zero Vanity Metrics:** There are no likes, follower counts, share buttons, or comment threads. The only metric is the survival integrity (time remaining) of a thought.
+* **Minimalist Interface:** Designed with a stark, dark-mode terminal aesthetic (`#0a0a0c`, `#38bdf8`, `#ef4444`). This emphasizes the text itself and the color-coded progress bars (shifting from Blue &rarr; Yellow &rarr; Red) that indicate the health of each capsule.
+* **Collective Responsibility:** The mechanics force a cooperative dilemma. Users must decide whether their desire to speak (type a new post) is worth actively destroying the thoughts others have left behind, fostering a highly intentional, quiet, and mindful digital environment.
+
+---
+
+### Deployment (Streamlit Cloud via GitHub)
+
+1. Commit and push these updated files to your GitHub repository:
    - `app.py`
    - `index.html`
    - `requirements.txt`
    - `README.md`
-4. Click **Commit changes**.
-5. Return to your Streamlit Cloud tab &rarr; click **`< Manage app`** in the bottom-right corner &rarr; click the three vertical dots **(⋮)** &rarr; **Reboot app**.
+2. In your Streamlit Cloud tab, open **`< Manage app`** in the bottom-right &rarr; click **⋮** &rarr; **Reboot app**.
 
 ---
 
-## Run Locally
+### Run Locally
 
 ```bash
 python app.py
 ```
 Starts a local server and opens **http://localhost:5000** in your browser.
-
-## Tech Stack
-
-- **Backend**: Python, Streamlit (Streamlit Community Cloud deployment runner)
-- **Frontend**: Vanilla HTML5, CSS3, JavaScript (ES6+)
-- **APIs**: Web Audio API (Acoustic Analyser), IntersectionObserver (Gaze), Page Visibility API (Focus Lock)
-- **Design**: Bespoke dark laboratory terminal (`#070709`, `#38bdf8`, `#ef4444`)
-
-## License
-
-MIT License. Free to use and distribute.
