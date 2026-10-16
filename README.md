@@ -1,119 +1,64 @@
-"""
-The Vigil — An experiment in digital impermanence.
+# The Vigil — The Architecture of Digital Presence
 
-Supports multiple deployment targets:
-1. Streamlit Community Cloud (via GitHub: `streamlit run app.py`)
-2. Local Python execution (`python app.py`)
-3. GitHub Pages (direct static hosting via root `index.html`)
-"""
+> An investor-ready, anti-social digital environment replacing algorithmic sorting with **Organic Attention Mechanics**.
 
-import os
-import sys
-from pathlib import Path
+---
 
-BASE_DIR = Path(__file__).resolve().parent
-INDEX_HTML_PATH = BASE_DIR / "index.html"
+## Executive Summary
 
+The modern internet is drowning in noise, spam, and algorithmic fatigue. Users are exhausted by infinite scrolls, and creators cannot guarantee genuine audience attention. **The Vigil** is a paradigm-shifting digital environment where content survives based purely on genuine human focus.
 
-def load_html() -> str:
-    """Read the self-contained Vigil application HTML."""
-    if INDEX_HTML_PATH.exists():
-        return INDEX_HTML_PATH.read_text(encoding="utf-8")
-    return "<h1>Error: index.html not found.</h1>"
+---
 
+## The Value Proposition
 
-def run_streamlit_app():
-    """Renders The Vigil inside Streamlit (Community Cloud or local)."""
-    import streamlit as st
-    import streamlit.components.v1 as components
+* **For Users:** A sanctuary from digital anxiety. No infinite scroll, no spam, and no pressure to perform for "likes." A calming, mindful space that respects human time.
+* **For Creators & Brands:** Guarantees 100% active, verified attention. If a post is visible, it means the audience is physically looking at it.
+* **For Communities:** The ultimate quality filter. Because adding "noise" (typing) degrades the ecosystem, users only post when they have something truly valuable to say, eliminating trolls and shallow hot-takes.
 
-    st.set_page_config(
-        page_title="The Vigil",
-        page_icon="🕯️",
-        layout="wide",
-        initial_sidebar_state="collapsed",
-    )
+---
 
-    # Clean styling to remove default Streamlit padding and headers
-    st.markdown(
-        """
-        <style>
-        #MainMenu, header, footer {
-            visibility: hidden;
-            display: none !important;
-        }
-        .block-container {
-            padding: 0 !important;
-            margin: 0 !important;
-            max-width: 100% !important;
-        }
-        iframe {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            border: none !important;
-            z-index: 999999;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+## Core Protocols (Professional Tier)
 
-    html_code = load_html()
-    components.html(html_code, height=950, scrolling=True)
+1. **Sustained Attention Protocol (SAP):** Passive viewport tracking measures genuine reading time. Silently focusing on a thought freezes decay and regenerates its lifespan (**+1.5s/s** up to a 90s ceiling).
+2. **The Entropy Tax (Noise-Cancellation Engine):** Interaction friction. Typing a new thought inflicts a global **-0.5s penalty** on every other active post, forcing users to weigh the value of their words against what already exists.
+3. **Elegant Ephemerality:** Content does not disappear abruptly. It gracefully diffuses from high-contrast clarity &rarr; optical blur &rarr; abstract unicode glyphs (`█`, `░`, `~`) before returning to the void.
 
+---
 
-def run_local_server(port: int = 5000):
-    """Fallback: Zero-dependency local web server for `python app.py`."""
-    import http.server
-    import socketserver
-    import webbrowser
+## Commercial Deployments & Interactive Modes
 
-    os.chdir(BASE_DIR)
-    handler = http.server.SimpleHTTPRequestHandler
+The application includes an interactive mode switcher for the four high-value enterprise deployments:
 
-    print()
-    print("  +==========================================+")
-    print("  |        T H E   V I G I L                 |")
-    print("  |                                          |")
-    print(f"  |   -> http://localhost:{port:<19}|")
-    print("  |   Reading heals.  Typing kills.          |")
-    print("  +==========================================+")
-    print()
+1. **🕯️ The Sanctuary (Digital Wellness — Calm / Headspace):** Anonymous burdens and reflections sustained purely through silent communal attention without vanity metrics.
+2. **🎙️ Creator Vigil (VIP Communities — Patreon / Skool / Discord):** Live "Vigil Sessions" where unreleased content survives only if the audience remains attentive. Turns reading into a multiplayer cooperative event.
+3. **🏛️ Executive Focus Room (Enterprise — Slack / Microsoft Teams):** Strategic briefs shared with a typing lock until the team has fully absorbed the proposal.
+4. **📰 Editorial Immersion (Publishing — The New York Times / The Atlantic):** Long-form reading canvas that adapts to the reader's pace, fading distractions and lighting active passages.
 
-    webbrowser.open(f"http://localhost:{port}")
+---
 
-    with socketserver.TCPServer(("", port), handler) as httpd:
-        try:
-            httpd.serve_forever()
-        except KeyboardInterrupt:
-            print("\nShutting down The Vigil server.")
+## Interactive Features in the Platform
 
+* **Slide-Out Architecture Dossier:** Click `[ ✦ Architecture Dossier ]` in the top right to access the full investor brief, value proposition cards, and enterprise use case specifications.
+* **Live Telemetry HUD:** Displays real-time Attention Shield count (SAP), Entropy Tax rate, and Active Capsule telemetry.
+* **Dynamic Health Progress Bar:** Color shifts smoothly from Cyan/Blue (>50%) &rarr; Amber/Yellow (20%–50%) &rarr; Red (<20%).
 
-# ─────────────────────────────────────────────────────────────
-# Execution Entry Point
-# ─────────────────────────────────────────────────────────────
+---
 
-# Detect if Streamlit is executing this file (Streamlit sets special module flags)
-is_streamlit = (
-    "streamlit" in sys.modules
-    or any("streamlit" in arg for arg in sys.argv)
-    or os.environ.get("STREAMLIT_SERVER_PORT") is not None
-)
+## Deployment (Streamlit Cloud via GitHub)
 
-if is_streamlit:
-    run_streamlit_app()
-elif __name__ == "__main__":
-    # If executed as `python app.py` directly:
-    try:
-        import streamlit
-        from streamlit.web import cli as stcli
+1. Push these updated files to your GitHub repository:
+   - `app.py`
+   - `index.html`
+   - `requirements.txt`
+   - `README.md`
+2. In your Streamlit Cloud tab, open **`< Manage app`** in the bottom-right &rarr; click **⋮** &rarr; **Reboot app**.
 
-        sys.argv = ["streamlit", "run", str(Path(__file__).resolve())]
-        sys.exit(stcli.main())
-    except ImportError:
-        # If streamlit is not installed locally, use Python's built-in web server
-        port = int(os.environ.get("PORT", 5000))
-        run_local_server(port=port)
+---
+
+## Run Locally
+
+```bash
+python app.py
+```
+Starts a local server and opens **http://localhost:5000** in your browser with zero dependencies.
