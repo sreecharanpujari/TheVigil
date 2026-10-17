@@ -1,12 +1,21 @@
 # The Vigil — The Architecture of Digital Presence
 
-> An investor-ready, anti-social digital environment replacing algorithmic sorting with **Organic Attention Mechanics**.
+> An investor-ready, anti-social digital environment replacing algorithmic sorting with **Organic Attention Mechanics**.  
+> **Architected, Engineered & Designed by Sree Charan**
 
 ---
 
 ## Executive Summary
 
 The modern internet is drowning in noise, spam, and algorithmic fatigue. Users are exhausted by infinite scrolls, and creators cannot guarantee genuine audience attention. **The Vigil** is a paradigm-shifting digital environment where content survives based purely on genuine human focus.
+
+---
+
+## Author & Creator Credits
+
+* **Founder & Principal Architect:** **Sree Charan**
+* **Project:** The Vigil (Organic Attention Architecture)
+* **Interactive Pitch Deck:** [presentation.html](presentation.html) (Launch via `▷ Animated PPT Deck` in the app)
 
 ---
 
@@ -26,9 +35,24 @@ The modern internet is drowning in noise, spam, and algorithmic fatigue. Users a
 
 ---
 
-## Commercial Deployments & Interactive Modes
+## Animated Presentation Deck (`presentation.html`)
 
-The application includes an interactive mode switcher for the four high-value enterprise deployments:
+The repository includes a cinematic, animated 9-slide HTML5 Presentation Deck (`presentation.html`):
+* **Controls:** Keyboard navigation with `←` / `→` or `Space`, `F` for Fullscreen.
+* **Slide Contents:**
+  1. *Title & Vision* (By Sree Charan)
+  2. *The Attention Crisis* (Market Problem)
+  3. *Multi-Sided Value Proposition* (Users, Creators, Communities)
+  4. *Protocol 01: Sustained Attention Protocol (SAP)*
+  5. *Protocol 02: The Entropy Tax*
+  6. *Protocol 03: Elegant Ephemerality*
+  7. *4 Commercial Enterprise Deployments*
+  8. *Market Size & Financial Model*
+  9. *Vision & Conclusion* (Founder: Sree Charan)
+
+---
+
+## Commercial Deployments & Interactive Modes
 
 1. **🕯️ The Sanctuary (Digital Wellness — Calm / Headspace):** Anonymous burdens and reflections sustained purely through silent communal attention without vanity metrics.
 2. **🎙️ Creator Vigil (VIP Communities — Patreon / Skool / Discord):** Live "Vigil Sessions" where unreleased content survives only if the audience remains attentive. Turns reading into a multiplayer cooperative event.
@@ -39,7 +63,8 @@ The application includes an interactive mode switcher for the four high-value en
 
 ## Interactive Features in the Platform
 
-* **Slide-Out Architecture Dossier:** Click `[ ✦ Architecture Dossier ]` in the top right to access the full investor brief, value proposition cards, and enterprise use case specifications.
+* **Animated PPT Deck Button:** Click `[ ▷ Animated PPT Deck ]` in the top navbar to launch the interactive presentation deck.
+* **Slide-Out Architecture Dossier:** Click `[ ✦ Architecture Dossier ]` to open the executive brief and protocol breakdown.
 * **Live Telemetry HUD:** Displays real-time Attention Shield count (SAP), Entropy Tax rate, and Active Capsule telemetry.
 * **Dynamic Health Progress Bar:** Color shifts smoothly from Cyan/Blue (>50%) &rarr; Amber/Yellow (20%–50%) &rarr; Red (<20%).
 
@@ -50,9 +75,11 @@ The application includes an interactive mode switcher for the four high-value en
 1. Push these updated files to your GitHub repository:
    - `app.py`
    - `index.html`
+   - `presentation.html`
    - `requirements.txt`
    - `README.md`
 2. In your Streamlit Cloud tab, open **`< Manage app`** in the bottom-right &rarr; click **⋮** &rarr; **Reboot app**.
+3. To view the presentation deck on Streamlit Cloud, simply append `?view=deck` to your app URL or click `▷ Animated PPT Deck` in the navigation!
 
 ---
 
@@ -61,4 +88,4 @@ The application includes an interactive mode switcher for the four high-value en
 ```bash
 python app.py
 ```
-Starts a local server and opens **http://localhost:5000** in your browser with zero dependencies.
+Starts a local server and opens **http://localhost:5000** in your browser. Both `index.html` and `presentation.html` are instantly accessible.
