@@ -13,6 +13,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 INDEX_HTML_PATH = BASE_DIR / "index.html"
+PRESENTATION_PATH = BASE_DIR / "presentation.html"
 
 
 def load_html() -> str:
@@ -22,13 +23,23 @@ def load_html() -> str:
     return "<h1>Error: index.html not found.</h1>"
 
 
+def load_presentation_html() -> str:
+    """Read the animated investor pitch deck HTML."""
+    if PRESENTATION_PATH.exists():
+        return PRESENTATION_PATH.read_text(encoding="utf-8")
+    return "<h1>Error: presentation.html not found.</h1>"
+
+
 def run_streamlit_app():
     """Renders The Vigil inside Streamlit (Community Cloud or local)."""
     import streamlit as st
     import streamlit.components.v1 as components
 
+    # Check query params for presentation deck view (?view=deck)
+    is_deck = st.query_params.get("view") in ("deck", "ppt", "presentation")
+
     st.set_page_config(
-        page_title="The Vigil",
+        page_title="The Vigil — Presentation Deck" if is_deck else "The Vigil — By Sree Charan",
         page_icon="🕯️",
         layout="wide",
         initial_sidebar_state="collapsed",
@@ -61,7 +72,7 @@ def run_streamlit_app():
         unsafe_allow_html=True,
     )
 
-    html_code = load_html()
+    html_code = load_presentation_html() if is_deck else load_html()
     components.html(html_code, height=950, scrolling=True)
 
 
